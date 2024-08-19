@@ -3,9 +3,14 @@
 - [Setting Up Multiple GitHub Accounts In VScode](#setting-up-multiple-github-accounts-in-vscode)
     - [The Goal:](#the-goal)
     - [How It Works:](#how-it-works)
+    - [Note](#note)
     - [1. Setting Up SSH](#1-setting-up-ssh)
     - [2. SSH Agent](#2-ssh-agent)
     - [3. Creating ~/.ssh Config file](#3-creating-ssh-config-file)
+    - [4. Creating Git Configs](#4-creating-git-configs)
+    - [4.1 Main .gitconfig File](#41-main-gitconfig-file)
+    - [4.2 The Other .gitconfig Files](#42-the-other-gitconfig-files)
+    - [el fin](#el-fin)
 
 
 ### The Goal:
@@ -16,7 +21,9 @@ I wanted a way to push and pull to separate github accounts, all while maintaini
 
 Create directories for each account somewhere on your PC and each folder acts as a "vault" for that GitHub account. So, for example, in my case i made 2 folders [Personal, Professional] and any time i clone a repo, say 'personal-repo', into them from its associated GitHub (using ssh ofcourse) the proper ssh key, username, and email address is used. If i move 'personal-repo' out of the 'Personal' folder credentials will not be supplied and will fail to push.
 
-Its important to note that your current .gitconfig may already have a username and email that will be used by default on anything outside of the folders we create here in this guide. I dont think you need to remove those entries, but i recommend it. If you choose not to, at least put the changes we're going to make *below* the default values that way we override them. I cover this more in [2. SSH Agent](#2-ssh-agent)
+### Note
+
+Its important to note that your current .gitconfig may already have a username and email that will be used by default on anything outside of the folders we create here in this guide. I dont think you need to remove those entries, but i recommend it. If you choose not to, at least put the changes we're going to make *below* the default values that way we override them. I cover this more in [4. Creating Git Configs](#4-creating-git-configs)
 
 <!-- TODO: update the above link when its written -->
 
@@ -60,7 +67,7 @@ touch config
 code config
 ```
 
-The `code config` should just open the file we just made in vscode. Now in that file copy paste this:
+The `code config` should open the file we just made in vscode. Now in that file copy paste this:
 ```
 Host *
   IgnoreUnknown AddKeysToAgent,UseKeychain
@@ -72,5 +79,75 @@ Host *
 - This 'IdentityFile' ssh key is the default key that will be used  
 - But this time only put one ssh key in the `<key-name>`. In my case i choose my personal key.
 
+### 4. Creating Git Configs
 
-i used [this blog](https://javascript.plainenglish.io/how-to-manage-multiple-github-accounts-in-vscode-using-ssh-keys-7f1a3adef58a) as a guide when setting up mine
+Ok almost there. This is the part that kind of stumped me but i'll walk you through it. We need to go to our root dir where our .gitconfig file is normally saved. So in the same powershell window just type:
+```
+cd ~
+```
+
+In this dir you should already have a *hidden* .gitconfig file. So i'd double check that and either copy paste it somewhere as a backup or just change it accordingly if you know what your doing. Dont worry you really can screw things up here- to bad at least...
+
+For the rest of us, imma pretend like you don't have one so lets go ahead and create 3 new .gitconfig files in this root dir. I'll explain them after.
+
+```
+touch .gitconfig
+touch .gitconfig.professional
+touch .gitconfig.personal
+```
+You can name 'professional' and 'personal' whatever you'd like, thats just what i named them. Just keep in that we reference this files later while editing them so if you're going to change the names make sure you do in the steps down below as well.
+
+Also if you made more SSH keys and had more GitHub accounts you're trying to link, use the same touch command to make .gitconfig files for them also. I.e. `touch .gitconfig.school`, `touch .gitconfig.secret`
+
+![alt text](Assets/Untitled-2024-08-14-0702.png)
+
+Heres an explaination. As you can see from my awesome flowchart, in the main .gitconfig we are adding a few simple if statements. These basically says "if the current repo is in personal/professional dir, include the contents of the corresponding .gitconfig files."
+
+### 4.1 Main .gitconfig File
+So lets start with the main .gitconfig file. Open that bad boy up in vscode or just type `code .gitconfig` in the same powershell. You might already see something like `[core] editor = \"C:\\Users\\...`, below that at the bottom paste this:
+
+```
+[includeIf "gitdir:C:/path/to/dir/"]
+path = ~/.gitconfig.professional
+```
+- in this case `/path/to/dir/` is the folder you decided you wanted to be the "vault" for the corresponding GitHub account. You know... the thing I was talking about at [How It Works:](#how-it-works)
+- And the `path =` is the file that we just created above. If you named it something else make sure to follow through with that here to.
+- Make sure to **not** mix up GitHub accounts here... definitely *not* speaking from experience here
+
+You'll want to repeat this part for every GitHub account your trying to link. So in my case i had to [includeIf] statements in my main .gitconfig. One for professional and one for personal.
+
+Finally at the very bottom of that main .gitconfig file paste this:
+```
+[core]
+excludesfile = ~/.gitignore
+```
+
+### 4.2 The Other .gitconfig Files
+
+The hard part is mostly out of the way. Lets handle those other .gitconfig files we made for personal and professional. You're going to want to repeat these next few steps for each additional GitHub you're trying to link up.
+
+Open those up in vscode again and paste this into them:
+```
+[user]
+email = <github-email-address>
+name = <associated-name>
+ 
+[github]
+user = "<github-username>"
+ 
+[core]
+sshCommand = "ssh -i ~/.ssh/<key-name>"
+```
+- keep the quotes
+- the 4 items you need to change are `<github-email-address>`, `<associated-name>`, `<github-username>`, and `<key-name>` (the corresponding SSH key we made in step 1)
+
+### el fin
+
+Annnd thats it! Once you've did that for all the GitHub accounts they should work properly. 
+
+Now just test it by git cloning using SSH from your personal GitHub into the personal folder try pushing. Check if the commit profile matches correctly on GitHub.com. Then move the cloned repo to your professional folder, you shouldnt be able to push. Try the same for your professional account.
+
+Remember to keep in mind the [Note](#note) I left. 
+
+Credit:  
+i used [this blog](https://javascript.plainenglish.io/how-to-manage-multiple-github-accounts-in-vscode-using-ssh-keys-7f1a3adef58a) as a guide when setting up mine. Check if out if you need more info.
