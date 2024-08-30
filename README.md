@@ -49,7 +49,7 @@ Next add our generated SSH keys to the agent using the below command.
 ```
 ssh-add ~/.ssh/<key-name>
 ```
-- Replace `<key-name>` with the name of the ssh key file you created in step 1
+- Replace `<key-name>` with the name of the ssh key file you created in step 1 (not the .pub file)
 - Don't forget DO THIS FOR EACH KEY YOU CREATED.
 
 Great now that you got that all setup lets add the corresponding SSH keys to their rightful GitHub accounts. This is straightforward enough so I'll give you the short version.
@@ -67,7 +67,7 @@ touch config
 code config
 ```
 
-The `code config` should open the file we just made in vscode. Now in that file copy paste this:
+The `code config` should open the file we just made in vscode. If it doesnt and you want that cool functionality open command palette and search for "Shell command: Install 'code' command in PATH". Now in that file copy paste this:
 ```
 Host *
   IgnoreUnknown AddKeysToAgent,UseKeychain
@@ -76,8 +76,9 @@ Host *
   IdentityFile ~/.ssh/<key-name>
 ```
 
-- This 'IdentityFile' ssh key is the default key that will be used  
+- This 'IdentityFile' ssh key (not .pub) is the default key that will be used  
 - But this time only put one ssh key in the `<key-name>`. In my case I choose my personal key.
+- MAC USERS: When I was setting this up on my mac for some reason my ssh keys would cross contaminate. Meaning I could commit to my professional from personal and vise versa. If you run in to this issue what worked for me was *removing* the `IdentityFile ~/.ssh/<key-name>` line. I don't know why but it just worked.
 
 ### 4. Creating Git Configs
 
@@ -114,7 +115,7 @@ path = ~/.gitconfig.professional
 - And the `path =` is the file that we just created above. If you named it something else make sure to follow through with that here too.
 - Make sure to **not** mix up GitHub accounts here... definitely *not* speaking from experience.
 
-You'll want to repeat this part for every GitHub account you're trying to link. So in my case I had to [includeIf] statements in my main .gitconfig. One for professional and one for personal.
+You'll want to repeat this part for every GitHub account you're trying to link. So in my case I had two [includeIf] statements in my main .gitconfig. One for professional and one for personal.
 
 Finally at the very bottom of that main .gitconfig file paste this:
 ```
